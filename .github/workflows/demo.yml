@@ -1,4 +1,5 @@
 name: Deploy website
+
 on:
   push:
     branches:
@@ -8,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install dependencies
         run: npm ci
       - name: Lint code
@@ -22,7 +23,7 @@ jobs:
       script-file: ${{ steps.publish.outputs.script-file }}
     steps:
       - name: Get code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install dependencies
         run: npm ci
       - name: Build website
@@ -30,28 +31,25 @@ jobs:
       - name: Publish JS filename
         id: publish
         shell: bash
-          run: |
-            JS_FILE=$(find dist/assets -maxdepth 1 -type f -name '*.js' | head -n 1)
-            echo "JS_FILE=$JS_FILE" >> "$GITHUB_ENV"
+        run: |
+          JS_FILE=$(find dist/assets -maxdepth 1 -type f -name '*.js' | head -n 1)
+          echo "script-file=$JS_FILE" >> "$GITHUB_OUTPUT"
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist-files
           path: dist
-          #path: |
-          #  dist
-          #  package.json
   deploy:
     needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Get build artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v4
         with:
           name: dist-files
       - name: Output contents
         run: ls
-      - name: Output filename
-        run: echo "${{ needs.build.outputs.script-file }}"
+      - name: Output filename from build job
+        run: echo "JS file from build: ${{ needs.build.outputs.script-file }}"
       - name: Deploy
-        run: echo "Deploying..."
+        run: echo "Deploying ${{ needs.build.outputs.script-file }}"
